@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:login_signup_firebase/authentication.dart';
 import 'package:login_signup_firebase/home_screen.dart';
@@ -16,14 +15,13 @@ class _SignUpState extends State<SignUp> {
   // bool isChecked = false;
 
   ImagePicker imagePicker = ImagePicker();
- XFile? pickedFile;
+  XFile? pickedFile, image;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
-  XFile? image;
-  
+  // XFile? image;
 
   Future takeCameraPhoto(ImageSource camera) async {
     // final pickedFile;
@@ -100,7 +98,7 @@ class _SignUpState extends State<SignUp> {
                   TextFormField(
                     controller: _emailController,
                     validator: (value) {
-                      if (value!.isEmpty) {
+                      if (value == null || value.isEmpty) {
                         return "Please enter your email";
                       }
                       return null;
@@ -114,7 +112,7 @@ class _SignUpState extends State<SignUp> {
                     controller: _passwordController,
                     obscureText: true,
                     validator: (value) {
-                      if (value!.isEmpty) {
+                      if (value == null || value.isEmpty) {
                         return "Please enter your password";
                       }
                       return null;
@@ -132,14 +130,33 @@ class _SignUpState extends State<SignUp> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         OutlinedButton(
-                          onPressed: () => AuthenticationHelper()
-                              .signUpwithEmailAndPassword(_emailController.text,
-                                  _passwordController.text)
-                              .then((value) => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          HomeScreen(image: pickedFile)))),
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              
+                              
+                              _formKey.currentState!.save() ;
+                            
+                            // signUp(_emailController.text, _passwordController.text);
+
+                            AuthenticationHelper()
+                                .signUpwithEmailAndPassword(
+                                    _emailController.text,
+                                    _passwordController.text,context)
+                                .then((value) => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            HomeScreen(image: pickedFile))));
+                            }
+                          },
+                          // onPressed: () => AuthenticationHelper()
+                          //     .signUpwithEmailAndPassword(_emailController.text,
+                          //         _passwordController.text)
+                          //     .then((value) => Navigator.push(
+                          //         context,
+                          //         MaterialPageRoute(
+                          //             builder: (context) =>
+                          //                 HomeScreen(image: pickedFile)))),
                           child: const Text(
                             "SignUp",
                             style: TextStyle(
@@ -149,14 +166,18 @@ class _SignUpState extends State<SignUp> {
                           ),
                         ),
                         OutlinedButton(
-                          onPressed: () => AuthenticationHelper()
-                              .signUpWithGoogle()
-                              .then((value) => Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                             HomeScreen(image: pickedFile,)),
-                                  )),
+                          onPressed: () {
+                            // AuthenticationHelper().getProfileImage;
+                            AuthenticationHelper()
+                                .signUpWithGoogle()
+                                .then((value) => Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => HomeScreen(
+                                                image: null,
+                                              )),
+                                    ));
+                          },
                           child: const Text(
                             "SignUp with Google",
                             style: TextStyle(
