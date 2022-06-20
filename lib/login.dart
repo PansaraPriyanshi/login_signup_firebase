@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:login_signup_firebase/authentication.dart';
 import 'package:login_signup_firebase/home_screen.dart';
 import 'package:login_signup_firebase/signUp.dart';
@@ -11,10 +14,17 @@ class LogIn extends StatefulWidget {
 }
 
 class _LogInState extends State<LogIn> {
+  final _box = Hive.box('imageBox');
+  String? imageFile;
+
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  getImage() async {
+    imageFile = await _box.get(_emailController.text);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,15 +82,35 @@ class _LogInState extends State<LogIn> {
                               AuthenticationHelper()
                                   .signInwithEmailAndPassword(
                                       _emailController.text,
-                                      _passwordController.text,context)
-                                  .then((value) => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => HomeScreen(
-                                            image: null,
-                                          ),
+                                      _passwordController.text,
+                                      context)
+                                  .then(
+                                (value) {
+                                  log("value$value");
+                                  if (value != null) {
+                                    getImage();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => HomeScreen(
+                                          image: imageFile,
+                                          useName: _emailController.text,
                                         ),
-                                      ));
+                                      ),
+                                    );
+                                  } else {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return const AlertDialog(
+                                          title: Text(
+                                              "Enter correct email and password"),
+                                        );
+                                      },
+                                    );
+                                  }
+                                },
+                              );
                             }
                           },
                           child: const Text(
@@ -93,18 +123,17 @@ class _LogInState extends State<LogIn> {
                         ),
                         OutlinedButton(
                           onPressed: () {
-                            //  if (_formKey.currentState!.validate()) {
-
-                            //     _formKey.currentState!.save() ;
-                            AuthenticationHelper()
-                                .signUpWithGoogle()
-                                .then((value) => Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => HomeScreen(
-                                                image: null,
-                                              )),
-                                    ));
+                            AuthenticationHelper().signUpWithGoogle().then(
+                                  (value) => Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => HomeScreen(
+                                        image: null,
+                                        useName: value!.displayName.toString(),
+                                      ),
+                                    ),
+                                  ),
+                                );
                           },
                           child: const Text(
                             "Login with Google",
@@ -117,27 +146,25 @@ class _LogInState extends State<LogIn> {
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 60),
-                    child: Row(
-                      children: [
-                        const Text("Don't have an account?"),
-                        const SizedBox(
-                          width: 0.05,
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              (context),
-                              MaterialPageRoute(
-                                builder: (context) => const SignUp(),
-                              ),
-                            );
-                          },
-                          child: const Text("SignUp"),
-                        )
-                      ],
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Don't have an account?"),
+                      const SizedBox(
+                        width: 0.05,
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            (context),
+                            MaterialPageRoute(
+                              builder: (context) => const SignUp(),
+                            ),
+                          );
+                        },
+                        child: const Text("SignUp"),
+                      )
+                    ],
                   ),
                 ],
               ),

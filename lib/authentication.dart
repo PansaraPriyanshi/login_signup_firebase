@@ -5,15 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthenticationHelper {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  // TextEditingController email = TextEditingController();
-  // TextEditingController password = TextEditingController();
-
   getProfileImage() {
-    if (_auth.currentUser?.photoURL != null) {
-      return Image.network(_auth.currentUser!.photoURL!,
+    if (auth.currentUser?.photoURL != null) {
+      return Image.network(auth.currentUser!.photoURL!,
           height: 100, width: 100);
     } else {
       return const Icon(Icons.account_circle, size: 100);
@@ -23,30 +20,17 @@ class AuthenticationHelper {
   Future signInwithEmailAndPassword(
       String email, String password, context) async {
     try {
-      // showDialog(
-      //     context: context,
-      //     builder: (context) {
-      //       return const AlertDialog(
-      //         title: Center(
-      //           child: CircularProgressIndicator(),
-      //         ),
-      //       );
-      //     });
-      UserCredential credential = await _auth.signInWithEmailAndPassword(
+      log('signInwithEmailAndPassword');
+      UserCredential credential = await auth.signInWithEmailAndPassword(
           email: email, password: password);
-      Navigator.pop(context);
+
+      log('signInwithEmailAndPassword');
+
       User? firebaseUser = credential.user;
+      log(firebaseUser.toString());
+
       return firebaseUser;
     } catch (e) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return  AlertDialog(
-              title: const Text( "Error Message"),
-            
-              content: Text(e.toString()),
-            );
-          });
       log(e.toString());
     }
   }
@@ -54,68 +38,23 @@ class AuthenticationHelper {
   Future signUpwithEmailAndPassword(
       String email, String password, context) async {
     try {
-      // showDialog(
-      //     context: context,
-      //     builder: (context) {
-      //       return const AlertDialog(
-      //         title: Center(
-      //           child: CircularProgressIndicator(),
-      //         ),
-      //       );
-      //     });
-      UserCredential credential = await _auth.createUserWithEmailAndPassword(
+      UserCredential credential = await auth.createUserWithEmailAndPassword(
           email: email, password: password);
-      Navigator.pop(context);
+
       User? firebseUser = credential.user;
       return firebseUser;
     } catch (e) {
       showDialog(
           context: context,
           builder: (context) {
-            return  AlertDialog(
-              title: const Text( "Error Message"),
-            
+            return AlertDialog(
+              title: const Text("Error Message"),
               content: Text(e.toString()),
             );
           });
       log(e.toString());
     }
-
-    // try {
-    //   final credential = await FirebaseAuth.instance
-    //       .signInWithEmailAndPassword(email: email, password: password);
-    // } on FirebaseAuthException catch (e) {
-    //   if (e.code == 'user-not-found') {
-    //     print('No user found for that email.');
-    //   } else if (e.code == 'wrong-password') {
-    //     print('Wrong password provided for that user.');
-    //   }
-    // }
   }
-
-  // Future<bool> login(String email, String password) async {
-  //   final user = (await FirebaseAuth.instance
-  //           .signInWithEmailAndPassword(email: email, password: password))
-  //       .user;
-  //   var isEmailVerified;
-  //   if (user!.isEmailVerified) {
-  //     return true;
-  //   }
-  //   return false;
-  // }
-
-  // Future register() async {
-  //   await _auth
-  //       .createUserWithEmailAndPassword(email: email.trim(), password: password)
-  //       .then(
-  //     (result) async {
-  //       //send verifcation email
-  //       result.user!.sendEmailVerification();
-  //       return result.user;
-  //     },
-  //   );
-  //   return null;
-  // }
 
   Future<User?> signUpWithGoogle() async {
     try {
@@ -126,28 +65,13 @@ class AuthenticationHelper {
         accessToken: googleAuth?.accessToken,
         idToken: googleAuth?.idToken,
       );
-      return (await _auth.signInWithCredential(credential)).user;
+
+      log(credential.toString());
+
+      return (await auth.signInWithCredential(credential)).user;
     } catch (e) {
       log(e.toString());
     }
     return null;
   }
-
-  // Future resetPass(String email) async {
-  //   try {
-  //     return await _auth.sendPasswordResetEmail(email: email);
-  //   } catch (e) {
-  //     log(e.toString());
-  //   }
-  // }
-
-  // Future sigOut() async {
-  //   HelperFunctions.saveUserLoggedInSharedPreference(false);
-  //   try {
-  //     _googleSignIn.signOut();
-  //     return await _auth.signOut();
-  //   } catch (e) {
-  //     log(e.toString());
-  //   }
-  // }
 }

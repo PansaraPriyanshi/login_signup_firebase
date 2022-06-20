@@ -1,4 +1,8 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:login_signup_firebase/authentication.dart';
 import 'package:login_signup_firebase/home_screen.dart';
 import 'package:login_signup_firebase/login.dart';
@@ -12,19 +16,16 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
-  // bool isChecked = false;
-
   ImagePicker imagePicker = ImagePicker();
   XFile? pickedFile, image;
+  final _box = Hive.box('imageBox');
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
-  // XFile? image;
 
   Future takeCameraPhoto(ImageSource camera) async {
-    // final pickedFile;
     pickedFile = (await imagePicker.pickImage(
         source: ImageSource.camera, imageQuality: 100));
 
@@ -36,7 +37,6 @@ class _SignUpState extends State<SignUp> {
   }
 
   Future takeGalleryPhoto(ImageSource gallery) async {
-    // final pickedFile;
     pickedFile = await imagePicker.pickImage(
         source: ImageSource.gallery, imageQuality: 100);
 
@@ -63,23 +63,27 @@ class _SignUpState extends State<SignUp> {
                   Center(
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.white,
-                      // backgroundImage: pickedFile != null
-                      //     ? FileImage(File(pickedFile!.path))
-                      //     : null,
-                      child: InkWell(
-                          onTap: () {
-                            showModalBottomSheet(
-                                context: context,
-                                builder: (context) => bottomSheet(context));
-                          },
-                          child: pickedFile == null
-                              ? const Icon(
-                                  Icons.add_a_photo_outlined,
-                                  color: Colors.black,
-                                  size: 30,
-                                )
-                              : null),
+                      backgroundColor: Colors.black,
+                      child: CircleAvatar(
+                        radius: 49,
+                        backgroundColor: Colors.white,
+                        backgroundImage: pickedFile != null
+                            ? FileImage(File(pickedFile!.path))
+                            : null,
+                        child: InkWell(
+                            onTap: () {
+                              showModalBottomSheet(
+                                  context: context,
+                                  builder: (context) => bottomSheet(context));
+                            },
+                            child: pickedFile == null
+                                ? const Icon(
+                                    Icons.add_a_photo_outlined,
+                                    color: Colors.black,
+                                    size: 30,
+                                  )
+                                : null),
+                      ),
                     ),
                   ),
                   const SizedBox(
@@ -103,9 +107,6 @@ class _SignUpState extends State<SignUp> {
                       }
                       return null;
                     },
-                    // onSaved: (value) {
-                    //   email = value;
-                    // },
                     decoration: const InputDecoration(hintText: "Email "),
                   ),
                   TextFormField(
@@ -117,9 +118,6 @@ class _SignUpState extends State<SignUp> {
                       }
                       return null;
                     },
-                    // onSaved: (value) {
-                    //   password = value;
-                    // },
                     decoration: const InputDecoration(hintText: "Password "),
                   ),
                   const SizedBox(
@@ -132,31 +130,29 @@ class _SignUpState extends State<SignUp> {
                         OutlinedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              
-                              
-                              _formKey.currentState!.save() ;
-                            
-                            // signUp(_emailController.text, _passwordController.text);
+                              _formKey.currentState!.save();
 
-                            AuthenticationHelper()
-                                .signUpwithEmailAndPassword(
-                                    _emailController.text,
-                                    _passwordController.text,context)
-                                .then((value) => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            HomeScreen(image: pickedFile))));
+                              _box.put(_emailController.text,
+                                  pickedFile!.path.toString());
+
+                              AuthenticationHelper()
+                                  .signUpwithEmailAndPassword(
+                                      _emailController.text,
+                                      _passwordController.text,
+                                      context)
+                                  .then(
+                                    (value) => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => HomeScreen(
+                                          image: pickedFile!.path.toString(),
+                                          useName: _emailController.text,
+                                        ),
+                                      ),
+                                    ),
+                                  );
                             }
                           },
-                          // onPressed: () => AuthenticationHelper()
-                          //     .signUpwithEmailAndPassword(_emailController.text,
-                          //         _passwordController.text)
-                          //     .then((value) => Navigator.push(
-                          //         context,
-                          //         MaterialPageRoute(
-                          //             builder: (context) =>
-                          //                 HomeScreen(image: pickedFile)))),
                           child: const Text(
                             "SignUp",
                             style: TextStyle(
@@ -167,16 +163,20 @@ class _SignUpState extends State<SignUp> {
                         ),
                         OutlinedButton(
                           onPressed: () {
-                            // AuthenticationHelper().getProfileImage;
-                            AuthenticationHelper()
-                                .signUpWithGoogle()
-                                .then((value) => Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => HomeScreen(
-                                                image: null,
-                                              )),
-                                    ));
+                            AuthenticationHelper().signUpWithGoogle().then(
+                              (value) {
+                                log(value.toString());
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => HomeScreen(
+                                            image: null,
+                                            useName:
+                                                value!.displayName.toString(),
+                                          )),
+                                );
+                              },
+                            );
                           },
                           child: const Text(
                             "SignUp with Google",
